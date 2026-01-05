@@ -1,101 +1,94 @@
-# Quantitative Structure–Property Relationship (QSPR) Framework for Dynamic Polymer Design
+# **ML-Guided Design of Dual-Dynamic Crosslinked Networks (DDCNs)**
 
-This repository provides the **Quantitative Structure–Property Relationship (QSPR)** framework and associated computational code utilized in our research on **high-resolution DLP 3D printing of Hierarchical Dual-Dynamic Network (DRDCN) photoresins.**
-The code implements a reproducible workflow for predicting material performance from molecular descriptors and accelerating the selection of optimal coordination crosslinkers.
+Official implementation of the QSPR framework for:  
+3D Printing of Hierarchical Dual-Dynamic Crosslinked Networks (DDCNs) Featuring Dynamic Covalent Bonds and Machine Learning-Optimized Coordination.
 
----
+**Repository URL:** [https://github.com/BUAA-TYZ/material](https://github.com/BUAA-TYZ/material)
 
-## Role of Machine Learning & Problem Solved
+This repository provides the **Quantitative Structure–Property Relationship (QSPR)** framework, datasets, and computational workflows utilized to accelerate the discovery of optimal coordination crosslinkers for high-resolution DLP 3D printing.
 
-The development of next-generation dynamic polymers requires exploring an enormous chemical space to identify ideal coordination nodes and network-forming components.
-Traditional experimental screening is **time-consuming, resource-intensive, and limited in scalability.**
+## **🧪 1\. Problem & Solution**
 
-To address this challenge, we developed a **data-driven QSPR workflow** powered by gradient boosting regression (GBRT).
-The machine learning model was specifically designed to:
-- Predict key performance indicators of metal–ligand coordination systems
-- Evaluate the balance between **stability, processability, and recyclability**
-- Rapidly screen **hundreds of candidate coordination crosslinkers**
-- Identify top-performing structures for experimental validation
+### **The Challenge**
 
-This computational screening successfully highlighted **Terbium-Acetylacetonate (Tb-ACAC)** as the optimal coordination node—an ML-guided discovery that played a critical role in enabling the DRDCN system to achieve high mechanical performance and excellent 3D printability.
+The development of next-generation dynamic polymers requires navigating an enormous combinatorial chemical space to identify ideal metal-ligand (M-L) coordination nodes. Traditional trial-and-error screening is **time-consuming**, **resource-intensive**, and inefficient when balancing conflicting properties such as mechanical strength, optical performance, and resin compatibility.
 
-The QSPR framework presented here can be reused and extended for rational design and accelerated discovery of advanced dynamic materials.
+### **Our Solution: ML-Guided Screening**
 
----
+To address this challenge, we developed a data-driven QSPR workflow powered by **Random Forest Regression (RFR)**. Unlike "black-box" approaches, this framework was specifically designed to:
 
-## Note on Data Access
+* **Bypass Experimental Bottlenecks:** Predict material performance solely based on **9 theoretical molecular descriptors**, enabling rapid pre-screening without synthesis.  
+* **Quantify Trade-offs:** Optimize a composite **Performance Index (PI)** that rigorously balances optical (Quantum Yield), mechanical (Bond Strength), and processing (Solubility) requirements.  
+* **Elucidate Mechanisms:** Reveal the **"Ligand-Metal Synergism"** and **"Electronic-Electrostatic Driving Forces"** governing material properties.
 
-While the QSPR codebase is fully open-sourced for transparency, reproducibility, and future adaptation:
+## **🎯 2\. Methodology**
 
-> The proprietary training dataset is not publicly released.
+### **Target Definition: Performance Index (PI)**
 
-This dataset contains:
-- Hundreds of meticulously curated metal-ligand coordination systems
-- Experimentally validated performance metrics
-- High-cost experimental data representing significant intellectual property
+To train the model, we constructed a ground-truth dataset where the target variable (PI) uses an **equal-weighting strategy** to balance conflicting engineering requirements:
 
-Because this dataset is a core asset enabling predictive accuracy and was derived from extensive laboratory effort, it cannot be shared publicly.
-However, the computational framework here is complete and can be applied to any appropriate user-provided dataset.
+PI \= 1/3×F \+ 1/3×S \+ 1/3×M
 
----
+* F **(FluorescenceQuantum Yield):** Experimental fluorescence efficiency (In-situ probe).  
+* S **(Bond Shortening):** Thermodynamic strength of the coordination node (Derived from **CCDC** crystal data).  
+* M **(Compatibility):** Ligand solubility in acrylate resin (Calculated via **SwissADME**).
 
-## Repository Structure
+**Note:** This formula is used **ONLY** to generate labels for the training set. The machine learning model learns to predict this PI directly from theoretical physicochemical descriptors.
 
-```
-.
-├── data/
-│   └── material.xlsx                    # Hided
-│
-├── outputs/
-│   ├── figures/                         # Auto-generated plots
-│   │   ├── cumulative_importance.png
-│   │   ├── feature_importance.png
-│   │   ├── pred_vs_actual.png
-│   │   ├── residual_distribution.png
-│   │   └── top10_predicted_vs_actual.png
-│   │
-│   ├── predicted_with_all_scores.xlsx   # Full model predictions
-│   └── tables/                          # Raw numerical data used for figures
-│       ├── cumulative_importance_data.csv
-│       ├── feature_importance_data.csv
-│       ├── pred_vs_actual_data.csv
-│       ├── residual_distribution_data.csv
-│       └── top10_predicted_vs_actual_data.csv
-│
-├── src/
-│   ├── config.py
-│   ├── data_utils.py
-│   ├── metrics_utils.py
-│   ├── models.py
-│   ├── pipeline.py
-│   └── plot_utils.py
-│
-├── main.py                              # Full QSPR training pipeline
-└── README.md
-```
+### **Feature Engineering**
 
----
+The model utilizes 9 fundamental physicochemical descriptors. Feature importance analysis reveals a distinct **"Dual Electronic-Electrostatic Driving Force"**, where the top features account for the majority of the decision weight:
 
-## Usage
+1. **Optical Gatekeeper:** **Antenna Effect (**A**)** ensures efficient ligand-to-metal energy transfer.  
+2. **Thermodynamic Foundation:** **Ligand Electronegativity (**Xdonor**)** and **Ionic Potential (**IP**)** govern the electrostatic interaction strength of the coordination node, which is critical for mechanical robustness.  
+3. **Quantum Identifier:** **f-electron count (**nf**)** defines the intrinsic emission color and energy levels.
 
-### Install dependencies
+## **📊 3\. Model Performance & Discovery**
 
-```bash
-pip install -r requirements.txt
-```
+The framework prioritizes **screening efficiency (ranking fidelity)** over absolute regression accuracy in low-performance regions.
 
-### Run the full QSPR pipeline
+### **Validation Metrics (Test Set)**
 
-This trains a Gradient Boosting Regression Tree model and generates all plots + output tables:
+* **RMSE \= 0.043:** Extremely low absolute error (\< 5% of theoretical range), confirming the model can accurately map theoretical features to the composite PI.  
+* R2 **\= 0.71:** Demonstrates robust predictive capability, effectively mitigating noise arising from complex fluorescence quenching mechanisms in non-emissive samples.
 
-```bash
-python main.py --model gbrt
-```
+### **Screening Outcome**
 
-Outputs are saved automatically in:
+Without prior experimental data, the computational screening successfully highlighted **Terbium-Acetylacetonate (Tb-ACAC)** as the optimal coordination node (**Rank 1**, Predicted PI: 0.805). This ML-guided discovery enabled the DDCN system to achieve high mechanical performance and excellent 3D printability.
 
-```
-outputs/figures/
-outputs/tables/
-outputs/predicted_with_all_scores.xlsx
-```
+Additionally, **Zinc-Acetylacetonate (Zn-ACAC)** (Predicted PI: 0.697) was identified as a structural control to decouple optical functionalities from mechanical reinforcement.
+
+## **🛠️ 4\. Usage**
+
+### **Prerequisites**
+
+* Python 3.8+  
+* scikit-learn  
+* pandas, numpy  
+* matplotlib, openpyxl
+
+### **Quick Start**
+
+1. **Clone the repository:**  
+   `git clone https://github.com/BUAA-TYZ/material.git` `cd material`
+2. **Install dependencies:**  
+   `pip install \-r requirements.txt`
+3. Run the pipeline (Train & Screen):  
+   The main script trains the Random Forest model, evaluates it on the test set, and predicts scores for all candidates.  
+   `python main.py \--model rf`
+   * *Outputs:* Feature importance plots, predicted vs. actual plots, and the final ranked candidate list (outputs/predicted\_with\_all\_scores.xlsx).
+
+## **📂 Repository Structure**
+
+* data/: Contains the M-L library (material.xlsx) with physicochemical descriptors.  
+* src/:  
+  * models.py: Implementation of Random Forest Regressor configuration.  
+  * pipeline.py: End-to-end training and evaluation workflow.  
+  * data\_utils.py: Data preprocessing and stratification logic.  
+* outputs/: Generated figures and prediction tables.
+
+## **📄 Citation**
+
+If you use this code or data in your research, please cite our paper:
+
+(Insert your full paper citation here)
