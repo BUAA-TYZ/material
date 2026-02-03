@@ -27,11 +27,11 @@ To address this challenge, we developed a data-driven QSPR workflow powered by *
 
 To train the model, we constructed a ground-truth dataset where the target variable (PI) uses an **equal-weighting strategy** to balance conflicting engineering requirements:
 
-PI \= 1/3×F \+ 1/3×S \+ 1/3×M
+$PI = \frac{1}{3} × (F + S + M)$
 
-* F **(FluorescenceQuantum Yield):** Experimental fluorescence efficiency (In-situ probe).  
-* S **(Bond Shortening):** Thermodynamic strength of the coordination node (Derived from **CCDC** crystal data).  
-* M **(Compatibility):** Ligand solubility in acrylate resin (Calculated via **SwissADME**).
+* $F$ **(FluorescenceQuantum Yield):** Experimental fluorescence efficiency (In-situ probe).  
+* $S$ **(Bond Shortening):** Thermodynamic strength of the coordination node (Derived from **CCDC** crystal data).  
+* $M$ **(Compatibility):** Ligand solubility in acrylate resin (Calculated via **SwissADME**).
 
 **Note:** This formula is used **ONLY** to generate labels for the training set. The machine learning model learns to predict this PI directly from theoretical physicochemical descriptors.
 
