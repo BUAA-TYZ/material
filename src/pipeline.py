@@ -1,9 +1,8 @@
 # src/pipeline.py
-import pandas as pd
 from pathlib import Path
 
 from .config import OUTPUT_DIR
-from .data_utils import load_dataset, train_test_split_data
+from .data_utils import load_dataset, load_prediction_dataset, train_test_split_data
 from .models import get_model
 from .metrics_utils import regression_metrics
 from .plot_utils import (
@@ -53,3 +52,27 @@ def run_pipeline(model_name: str = "rf"):
     plot_top10(df, target_col)
 
     return metrics
+
+
+def predict_external_xlsx(test_path, model_name: str = "rf", output_path=None):
+    """
+    用训练集全量拟合模型，对外部 Excel 做预测。
+    外部 Excel 需要包含与训练集一致的特征列，前两列会用于拼接 material。
+    """
+    train_df, X_train, y_train, feature_cols, _ = load_dataset()
+    model = get_model(model_name)
+    model.fit(X_train, y_train)
+
+    test_path = Path(test_path)
+    test_df, X_test = load_prediction_dataset(test_path, feature_cols)
+    test_df["predicted_score"] = model.predict(X_test)
+
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    output_path = Path(output_path) if output_path else OUTPUT_DIR / f"{test_path.stem}_predicted.xlsx"
+    test_df.to_excel(output_path, index=False)
+
+    print(f"训练集样本数: {len(train_df)}")
+    print(f"待预测样本数: {len(test_df)}")
+    print(f"预测结果已保存: {output_path}")
+
+    return output_path
