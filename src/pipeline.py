@@ -1,11 +1,12 @@
 # src/pipeline.py
 from pathlib import Path
 
-from .config import OUTPUT_DIR
+from .config import OUTPUT_DIR, RANDOM_STATE, TABLE_DIR
 from .data_utils import load_dataset, load_prediction_dataset, train_test_split_data
 from .models import get_model
-from .metrics_utils import regression_metrics
+from .metrics_utils import regression_metrics, repeated_kfold_evaluation
 from .plot_utils import (
+    plot_cross_validation_metrics,
     plot_pred_vs_actual,
     plot_residual_hist,
     plot_feature_importance,
@@ -29,6 +30,30 @@ def run_pipeline(model_name: str = "rf"):
     metrics = regression_metrics(y_test, y_pred_test)
     print(f"[{model_name}] R²={metrics['r2']:.3f}, RMSE={metrics['rmse']:.3f}, MAE={metrics['mae']:.3f}")
 
+    # 4.1 5 次重复十折交叉验证
+    cv_splits = 10
+    cv_repeats = 5
+    cv_fold_results, cv_summary = repeated_kfold_evaluation(
+        get_model(model_name),
+        X,
+        y,
+        n_splits=cv_splits,
+        n_repeats=cv_repeats,
+        random_state=RANDOM_STATE,
+    )
+    TABLE_DIR.mkdir(parents=True, exist_ok=True)
+    cv_fold_results.to_csv(
+        TABLE_DIR / "cross_validation_fold_results.csv", index=False
+    )
+    cv_summary.to_csv(TABLE_DIR / "cross_validation_metrics.csv", index=False)
+    cv_values = cv_summary.set_index("metric")
+    print(
+        f"[{model_name}] {cv_repeats}×{cv_splits}-fold CV: "
+        f"R²={cv_values.loc['r2', 'mean']:.3f}±{cv_values.loc['r2', 'std']:.3f}, "
+        f"RMSE={cv_values.loc['rmse', 'mean']:.3f}±{cv_values.loc['rmse', 'std']:.3f}, "
+        f"MAE={cv_values.loc['mae', 'mean']:.3f}±{cv_values.loc['mae', 'std']:.3f}"
+    )
+
     # 5. 对全部样本预测 & 保存
     df["predicted_score"] = model.predict(X)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -50,6 +75,14 @@ def run_pipeline(model_name: str = "rf"):
 
     # 6.4 Top10 样本预测 vs 实际
     plot_top10(df, target_col)
+
+    # 6.5 重复交叉验证指标分布
+    plot_cross_validation_metrics(
+        cv_fold_results,
+        model_name=model_name,
+        n_splits=cv_splits,
+        n_repeats=cv_repeats,
+    )
 
     return metrics
 

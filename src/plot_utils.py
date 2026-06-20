@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from pathlib import Path
 from .config import FIG_DIR, TABLE_DIR
 
 
@@ -114,3 +113,79 @@ def plot_top10(df_with_pred, target_col, filename_prefix="top10_predicted_vs_act
     plt.tight_layout()
     plt.savefig(FIG_DIR / f"{filename_prefix}.png", dpi=300)
     plt.close()
+
+
+def plot_cross_validation_metrics(
+    fold_results,
+    model_name,
+    n_splits=10,
+    n_repeats=5,
+    filename_prefix="cross_validation_metrics",
+):
+    """绘制重复交叉验证中 R²、RMSE 和 MAE 的逐折分布。"""
+    ensure_dirs()
+    metric_config = [("r2", "R²"), ("rmse", "RMSE"), ("mae", "MAE")]
+    fill_color = "#FFE15B"
+    edge_color = "#736422"
+    ink_color = "#1F2430"
+    muted_color = "#6F768A"
+    grid_color = "#E6E8F0"
+
+    fig, axes = plt.subplots(1, 3, figsize=(10, 4.6))
+    fig.patch.set_facecolor("#FCFCFD")
+
+    for ax, (metric, label) in zip(axes, metric_config):
+        ax.set_facecolor("#FFFFFF")
+        box = ax.boxplot(
+            fold_results[metric],
+            patch_artist=True,
+            widths=0.45,
+            showmeans=True,
+            meanprops={
+                "marker": "o",
+                "markerfacecolor": edge_color,
+                "markeredgecolor": edge_color,
+                "markersize": 4,
+            },
+            medianprops={"color": ink_color, "linewidth": 1.2},
+            whiskerprops={"color": edge_color, "linewidth": 1.0},
+            capprops={"color": edge_color, "linewidth": 1.0},
+            flierprops={
+                "marker": "o",
+                "markerfacecolor": "#FFFFFF",
+                "markeredgecolor": edge_color,
+                "markersize": 3,
+            },
+        )
+        box["boxes"][0].set_facecolor(fill_color)
+        box["boxes"][0].set_edgecolor(edge_color)
+        ax.set_xticks([1], [label])
+        ax.set_ylabel(label)
+        ax.grid(axis="y", color=grid_color, linewidth=0.8)
+        ax.grid(axis="x", visible=False)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_color("#D7DBE7")
+        ax.spines["bottom"].set_color("#D7DBE7")
+        ax.tick_params(colors=muted_color)
+
+    fig.suptitle(
+        f"Repeated cross-validation metrics ({model_name.upper()})",
+        x=0.08,
+        y=0.98,
+        ha="left",
+        color=ink_color,
+        fontsize=13,
+        fontweight="semibold",
+    )
+    fig.text(
+        0.08,
+        0.92,
+        f"{n_repeats} repeats × {n_splits} folds; each point contributes one validation score",
+        ha="left",
+        color=muted_color,
+        fontsize=9,
+    )
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.13, top=0.82, wspace=0.42)
+    fig.savefig(FIG_DIR / f"{filename_prefix}.png", dpi=300, bbox_inches="tight")
+    plt.close(fig)

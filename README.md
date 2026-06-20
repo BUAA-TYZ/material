@@ -53,8 +53,9 @@ python main.py
 1. Loads the training dataset (material.xlsx) and the blind test dataset (test.xlsx).  
 2. Trains the Random Forest Regressor (RFR) on the training set.  
 3. Evaluates model performance and feature importances.  
-4. Performs forward prediction on the unseen candidates.  
-5. Automatically generates and saves all corresponding figures and data tables into the outputs/ directory.
+4. Performs 5-times repeated 10-fold cross-validation and exports fold-level metrics.
+5. Performs forward prediction on the unseen candidates.
+6. Automatically generates and saves all corresponding figures and data tables into the outputs/ directory.
 
 ## **📁 5\. Repository Structure & Outputs**
 
@@ -81,8 +82,9 @@ material/
     │   ├── residual\_distribution.png   \# Distribution of prediction errors  
     │   ├── feature\_importance.png      \# RFR feature importance analysis  
     │   ├── cumulative\_importance.png   \# Cumulative feature importance curve  
+    │   ├── cross\_validation\_metrics.png \# Repeated cross-validation metric distributions
     │   └── top10\_predicted\_vs\_actual.png \# Bar chart of the top candidate materials  
-    └── tables/                         \# Raw CSV data corresponding to the generated figures  
+    └── tables/                         \# Raw CSV data for figures and cross-validation
 
 
 [image1]: <data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKQAAAAYCAYAAAB0vVZPAAAFYElEQVR4Xu2aS4gdRRSG75CIis9AxmFeXXceMAwqEgZRwYX4QkFciGBwIgRcuBIkEF+rBHHhUhGEoAQRceFAdBGM4iIiSHQ2BhwC0cAYorMQGRCzUEn0/2+fujn33Orbr5m+IPVB0X3POVV96tTpqq6aabUikUgkEolEIpFIJBKJbAPtdnuvc+7fQSVJkudtPQLdirVlmZ2dvcnaNswO+HFG/PkB5T2UVd5DN0I5+v2cN87zH7JHrc3MzMwd2qYpMBaPif+Hcf8i7v/G/X5cL1nb7YYxNHH52dpoYP+dsT9gbbpAuUwjdHKXli8tLV1FORr7Qss10L8rNtdYXcOMTE9PPy6dfdoqp6am5kW3NjExsVvrJLh/if4jrfNAftnKmgRjsw/lrJXDrx9RLlh5U+DZGy594TPjg/jeBf0xie/rVt/DwsLCDTD6msZWR+SBWbpFlN8HOdMU8OES/WTiWZ0H+n/07KjkawwUyoVQXyVGH1p5UfDM962sLPTLThgiX4b8JSvPw+XMaEXASjHGuPnZ0uo98O9zJ3mE+1mr70HNKqtWR0QXfBjkb4n+uNU1iV8O0Nl3rE7DQbCzo8g3GChc72E7aG+v1jNG0C9pWRnqJiQ/EaR/oYQ8gJdw0srzYCysrCxMRMaNsZG49a2S0B1tyadSVh714JNKKlp2SkNnrIK4dKpm3dJv6FYiPv4GP261Oo0MwogRM1jHGUwM7LXSnxPagDEKJXJR6iakGvCnrA4+347LTivPQ2JRC7SxwrjJy5z1wqyOjY1dJ2OUv5K6dMllY30zAORfUsdvSasj8hAuk6Xf0K2CL4P4/6DVFYH91nWdbIhaapDxe8PfV6FuQnLQfaylr99ydmr1v1yFcVuTkBd5HR0dvV786skhyF5rpZOa3xjmr6Sqo0dU+VNkn1l7j3xXdepaXRZw+CuU8yXKM7YNi5MXqlVxcPCMo3qp8ZsfyA55GX6v+fsq1E1IAh/2+HjrkjVZ5OHqJ2RnZfE/JGbd73MmKWK7T3QnUS4neZOGSzcl7Fj+VGpwsjNHWbe6JvEDY+VFQd3NgKyz426nx2KM0bK1CTE3N3cLbMcD5eOAbJz2to0icJmGb5/SR5eza5XZte/ZKL8EZOOwv9m2EQLJda9OMPriXzx5qU9rnZPPIi8LojY061aXh7uyoVmxuiYRHzpLxyA424YC4gLLMWxPsF25PpEEPmdCuCtHR4WLbaMo6khu4OwL/WH7zEElCRwtheBsmKgdM+peRDnJe1l1XlE6tv2q/52Jk+OepMKmxMlxT+40vM3QBwbDyi0uMBNyo+ICM4wcZ3QGCOWbVsXPAU9e0gygu+GyCiL+ZR8wD8DVXLKd+Yzhb5SNycnJKeTEQ17OpKWflGv7INKh9SqbEqmbGawQcO4BlCeLFiSGs21Y4MPb9KU1IGmS9K8ae6zcvuUa2G9KH3OTPY+qCYkV7E6XrkChXXTnBGRY35DOrCzso8Trey13spJqWRAMxC5poPQbhkDdxrrJkGdHj/hy1h6Kc7CYjAjWfi33oN5m1oCiziMuXQFCx2GlqJqQfLaM0REtd+l37Tn2TcvL4GokJCaKh1H/mJY52VPYeLp0Je37LOqizoR6SlJg2UZg77P1WNrmIHkIcGnzf79mX86LX2/Mz8/fqA35t2roThn/D2kbD/vFQ2krL0vVhIRvf8D/q3E9KL7+6tK/SP2Ecr+1L4OrkJCoc1rHjUXpFtHPF3gvnzznrK0b4p84hwH/qWIRyfgJrqcQnLutwbCokZDdjQDun+Ugo6038XOHMquEq5CQkf8JSKKXrWzYICE/sLJIJBKJRCKRDP4DoAwjvTTDXKIAAAAASUVORK5CYII=>
